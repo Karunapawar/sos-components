@@ -24,6 +24,7 @@ import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.commons.helpers.YADEArgumentsHelper;
 import com.sos.yade.engine.exceptions.YADEEngineSourceFilesSelectorException;
 import com.sos.yade.engine.exceptions.YADEEngineSourceZeroByteFilesException;
+import com.sos.yade.engine.handlers.operations.copymove.file.helpers.YADEFileReplacementHelper;
 
 public class YADESourceFilesSelector {
 
@@ -110,9 +111,23 @@ public class YADESourceFilesSelector {
         YADESourceArguments sourceArgs = sourceDelegator.getArgs();
         ProviderFileSelectionConfig.Builder builder = new ProviderFileSelectionConfig.Builder();
         if (!singleFiles) {
+            
             builder.directory(sourceDelegator.getDirectory());
+
+            String fileSpec = sourceArgs.getFileSpec().getValue();
+            if (fileSpec != null) {
+                fileSpec = YADEFileReplacementHelper.replaceVariables(fileSpec, "");
+            }
+            builder.fileNamePattern(Pattern.compile(fileSpec, Pattern.CASE_INSENSITIVE));
+            
+            // String fileSpec = sourceArgs.getFileSpec().getValue();
+            // if (fileSpec != null) {
+            //    fileSpec = replaceDateVariables(fileSpec);
+            // }
+            // builder.fileNamePattern(Pattern.compile(fileSpec, 0));
+            
             // case sensitive
-            builder.fileNamePattern(Pattern.compile(sourceArgs.getFileSpec().getValue(), 0));
+            // builder.fileNamePattern(Pattern.compile(sourceArgs.getFileSpec().getValue(), 0));
             if (!SOSString.isEmpty(sourceArgs.getExcludedDirectories().getValue())) {
                 // case sensitive
                 builder.excludedDirectoriesPattern(Pattern.compile(sourceArgs.getExcludedDirectories().getValue(), 0));
@@ -133,6 +148,18 @@ public class YADESourceFilesSelector {
         }
         return new ProviderFileSelection(builder.build());
     }
+//     private static String replaceDateVariables(String value) {
+//     while (value.contains(VAR_DATE_PREFIX)) {
+//         int start = value.indexOf(VAR_DATE_PREFIX) + VAR_DATE_PREFIX.length();
+//         int end = value.indexOf("]", start);
+//         String dateFormat = value.substring(start, end);
+//         value = value.replace(
+//                 VAR_DATE_PREFIX + dateFormat + "]",
+//                 new SimpleDateFormat(dateFormat).format(new Date())
+//         );
+//     }
+//     return value;
+// }
 
     private static List<ProviderFile> selectSingleFiles(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator,
             ProviderFileSelection selection, boolean polling) throws YADEEngineSourceFilesSelectorException {
